@@ -1,0 +1,33 @@
+name: Build Extension APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Descargar herramientas base
+        run: |
+          git clone --branch v1.4.35 --depth 1 https://github.com/tachiyomiorg/tachiyomi-extensions.git base
+          
+      - name: Copiar nuestra extension
+        run: |
+          mkdir -p base/src/es/manhwaweb
+          cp -r src/es/manhwaweb/* base/src/es/manhwaweb/
+
+      - name: Compilar APK
+        working-directory: base
+        run: |
+          chmod +x gradlew
+          ./gradlew :src:es:manhwaweb:assembleRelease
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: ManhwaWeb-APK
+          path: base/src/es/manhwaweb/build/outputs/apk/release/*.apk
